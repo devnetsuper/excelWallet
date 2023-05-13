@@ -13,6 +13,21 @@ import re
 INPUT_PATH = 'input/'
 OUTPUT_PATH = 'output/'
 
+asset_usd_mapping = {
+    'bitcoin': 'btcusd',
+    'bitcoin cash': 'bchusd',
+    'dogecoin': 'dogeusd',
+    'dash': 'dashusd',
+    'litecoin': 'ltcusd',
+    'zcash': 'zecusd',
+    'ethereum': 'ethusd',
+    'binance smart chain': 'bnbusd',
+    'polygon': 'maticusd',
+    'polkadot': 'dotusd',
+    'solana': 'solusd',
+    'algorand': 'algousd',
+    'ripple': 'xrpusd'
+}
 
 HEADERS = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36" ,
@@ -199,7 +214,8 @@ def process_scan(asset, asset_symbol, asset_decimal, address, start_date, end_da
 def process_blockchair_asset(asset, asset_symbol, asset_decimal, api_keyword, address, start_date, end_date, output):
     start_date = datetime.fromtimestamp(start_date).strftime('%Y-%m-%d')
     end_date = datetime.fromtimestamp(end_date).strftime('%Y-%m-%d')
-    txns = requests.get(f'https://api.blockchair.com/{api_keyword}/dashboards/address/{address}?transaction_details=true&q=time({start_date}..{end_date})')
+    api_key = 'change it'
+    txns = requests.get(f'https://api.blockchair.com/{api_keyword}/dashboards/address/{address}?transaction_details=true&q=time({start_date}..{end_date})&key={api_key}')
    
     content = json.loads(txns.content)
    
@@ -218,7 +234,7 @@ def process_blockchair_asset(asset, asset_symbol, asset_decimal, api_keyword, ad
         
        
         work_sheet.append([row['time'], row['block_id'], row['hash'], sent, received, asset_symbol, ''])
-        set_verified_tx(work_sheet, work_sheet.max_row, 8, f'{ASSET_TX_URLS[asset_symbol]}{row["hash"]}')    
+        set_verified_tx(work_sheet, work_sheet.max_row, 6, f'{ASSET_TX_URLS[asset_symbol]}{row["hash"]}')    
 
 
         
@@ -310,7 +326,6 @@ def process_blockdaemon_asset(asset, asset_symbol, asset_decimal, api_keyword, a
         else:
             content = None
              
-
 def process_address(asset, address, start_date, end_date, output):
     if asset is None:
         return
@@ -350,9 +365,31 @@ def process_input(asset, address, start_date, end_date, output):
     process_address(asset, address, start_date, end_date, output)            
     print(f'Processing Done. {datetime.now()}')
     
+
+def get_history(asset, before, after):
+    history = requests.get(f'https://api.cryptowat.ch/markets/binance-us/{asset}/ohlc?before={before}&after={after}&periods=86400', headers=HEADERS)
+    content = json.loads(history.content)
+    return content['result']['86400']
+
+def generate_historical_price_data(start_date, end_date, asset):    
+    rows = get_history(asset, end_date + 28800, start_date - 28800)
     
+    filename = f'{OUTPUT_PATH}{asset}_price_history_{start_date}-{end_date}.xlsx'
+    
+    work_book = Workbook()
+    work_sheet = work_book.active
+    work_sheet.append(['Date', 'Value(USD)'])
+
+    for row in rows:
+        date = datetime.fromtimestamp(int(row[0])).strftime('%m/%d/%Y')
+        work_sheet.append([date, row[4]])        
+    
+    work_book.save(filename)
+
+
 def run():
-    print('nakedAddress will ask you to add the type of network, wallet address and your start/end dates. Type your response and press enter.')
+    print('nakedAddress (terminalWallet) will ask you to add the type of network, wallet address and your start/end dates. Type your response and press enter.')
+    print('For price historical data, type "price" where it asks for wallet address')
     print('Write the complete name for the type of network, for example, Ethereum, not ETH')
     print('Available Networks: Algorand, Avalanche, Binance Smart Chain, Bitcoin, Bitcoin Cash, Cardano, Dash, Dogechain, Ethereum, Litecoin, Polygon, Ripple, Zcash.')
     asset = input('Network:').strip()
@@ -360,7 +397,11 @@ def run():
     start_date = int(datetime.strptime(input('Start Date (m/d/yyyy): '), "%m/%d/%Y").timestamp())
     end_date = int(datetime.strptime(input('End Date (m/d/yyyy): '), "%m/%d/%Y").timestamp())
     
+    if address == 'price':
+        print(f'Generating price history for {asset}...')
+        generate_historical_price_data(start_date, end_date, asset_usd_mapping[asset])
+        return
+    
     output = Workbook()
     process_input(asset, address, start_date, end_date, output)
-    output.save(f'{OUTPUT_PATH}{address}.xlsx')    
-    
+    output.save(f'{OUTPUT_PATH}{address}.xlsx')
