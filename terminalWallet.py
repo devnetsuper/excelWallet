@@ -3,6 +3,7 @@ from openpyxl import load_workbook
 from openpyxl import Workbook
 from datetime import datetime
 from decimal import Decimal
+from colorama import Fore, Style, init
 import requests
 import shutil
 import json
@@ -20,13 +21,15 @@ asset_usd_mapping = {
     'dash': 'dashusd',
     'litecoin': 'ltcusd',
     'zcash': 'zecusd',
+    'cardano': 'adausd',
     'ethereum': 'ethusd',
     'binance smart chain': 'bnbusd',
     'polygon': 'maticusd',
     'polkadot': 'dotusd',
     'solana': 'solusd',
     'algorand': 'algousd',
-    'ripple': 'xrpusd'
+    'ripple': 'xrpusd',
+    'avalanche': 'avaxusd'
 }
 
 HEADERS = {
@@ -214,7 +217,7 @@ def process_scan(asset, asset_symbol, asset_decimal, address, start_date, end_da
 def process_blockchair_asset(asset, asset_symbol, asset_decimal, api_keyword, address, start_date, end_date, output):
     start_date = datetime.fromtimestamp(start_date).strftime('%Y-%m-%d')
     end_date = datetime.fromtimestamp(end_date).strftime('%Y-%m-%d')
-    api_key = 'change it'
+    api_key = 'your api key goes here' 
     txns = requests.get(f'https://api.blockchair.com/{api_keyword}/dashboards/address/{address}?transaction_details=true&q=time({start_date}..{end_date})&key={api_key}')
    
     content = json.loads(txns.content)
@@ -388,10 +391,10 @@ def generate_historical_price_data(start_date, end_date, asset):
 
 
 def run():
-    print('nakedAddress (terminalWallet) will ask you to add the type of network, wallet address and your start/end dates. Type your response and press enter.')
-    print('For price historical data, type "price" where it asks for wallet address')
-    print('Write the complete name for the type of network, for example, Ethereum, not ETH')
-    print('Available Networks: Algorand, Avalanche, Binance Smart Chain, Bitcoin, Bitcoin Cash, Cardano, Dash, Dogechain, Ethereum, Litecoin, Polygon, Ripple, Zcash.')
+    print(Fore.GREEN + Style.BRIGHT + 'terminal' + Fore.GREEN + Style.BRIGHT + 'Wallet' + Fore.YELLOW + Style.BRIGHT + ' will ask you to input the type of network, wallet address and your start/end dates. Type your response and press enter.\n')
+    print(Fore.YELLOW + Style.BRIGHT + 'For price historical data, type "price" where it asks for wallet address.\n')
+    print(Fore.YELLOW + Style.BRIGHT + 'Write the complete name for the type of network, for example, Ethereum, not ETH. Use lowercase characters for historical price data, for example "ethereum."\n')
+    print(Fore.RED + Style.BRIGHT + 'Available Networks:' + Fore.GREEN + Style.BRIGHT + 'Algorand, Avalanche, Binance Smart Chain, Bitcoin, Bitcoin Cash, Cardano, Dash, Dogechain, Ethereum, Litecoin, Polygon, Ripple, Zcash.\n')
     asset = input('Network:').strip()
     address = input('Address:').strip()
     start_date = int(datetime.strptime(input('Start Date (m/d/yyyy): '), "%m/%d/%Y").timestamp())
@@ -404,4 +407,5 @@ def run():
     
     output = Workbook()
     process_input(asset, address, start_date, end_date, output)
-    output.save(f'{OUTPUT_PATH}{address}.xlsx')
+    output.save(f'{OUTPUT_PATH}{address}.xlsx')    
+    
