@@ -363,7 +363,7 @@ def process_address(asset, address, start_date, end_date, output):
     
 
 def process_input(asset, address, start_date, end_date, output):
-    print(f'Naked Adress running... {datetime.now()}')
+    print(f'excelWallet running... {datetime.now()}')
     print(f'Working with address {address}') 
     process_address(asset, address, start_date, end_date, output)            
     print(f'Processing Done. {datetime.now()}')
@@ -391,7 +391,7 @@ def generate_historical_price_data(start_date, end_date, asset):
 
 
 def run():
-    print(Fore.GREEN + Style.BRIGHT + 'terminal' + Fore.GREEN + Style.BRIGHT + 'Wallet' + Fore.YELLOW + Style.BRIGHT + ' will ask you to input the type of network, wallet address and your start/end dates. Type your response and press enter.\n')
+    print(Fore.GREEN + Style.BRIGHT + 'excel' + Fore.GREEN + Style.BRIGHT + 'Wallet' + Fore.YELLOW + Style.BRIGHT + ' will ask you to input the type of network, wallet address and your start/end dates. Type your response and press enter.\n')
     print(Fore.YELLOW + Style.BRIGHT + 'For price historical data, type "price" where it asks for wallet address.\n')
     print(Fore.YELLOW + Style.BRIGHT + 'Write the complete name for the type of network, for example, Ethereum, not ETH. Use lowercase characters for historical price data, for example "ethereum."\n')
     print(Fore.RED + Style.BRIGHT + 'Available Networks:' + Fore.GREEN + Style.BRIGHT + 'Algorand, Avalanche, Binance Smart Chain, Bitcoin, Bitcoin Cash, Cardano, Dash, Dogechain, Ethereum, Litecoin, Polygon, Ripple, Zcash.\n')
@@ -407,5 +407,5 @@ def run():
     
     output = Workbook()
     process_input(asset, address, start_date, end_date, output)
-    output.save(f'{OUTPUT_PATH}{address}.xlsx')    
+    output.save(f'{OUTPUT_PATH}{address}_{asset}.xlsx')    
     
